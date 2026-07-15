@@ -1,0 +1,1027 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1.0" />
+<meta name="description" content="Aphelion — private spaceflight for the civilian era. Book your seat to the edge of space and beyond." />
+<title>Aphelion — Private Spaceflight for the Civilian Era</title>
+<link rel="preconnect" href="https://fonts.googleapis.com" />
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+<link href="https://fonts.googleapis.com/css2?family=Sora:wght@300;400;500;600;700;800&family=Instrument+Serif:ital@0;1&display=swap" rel="stylesheet" />
+<style>
+/* ============================================================
+   APHELION — Private Spaceflight
+   A sleek, cosmic, futuristic template website.
+   Single-file build: HTML + CSS + vanilla JS.
+   ============================================================ */
+
+/* ---------- Design Tokens ---------- */
+:root {
+  --void: #05060f;
+  --deep: #0a0d1f;
+  --panel: #10132b;
+  --panel-2: #161a3a;
+  --nebula: #6d5cf5;
+  --nebula-2: #a24bff;
+  --plasma: #ff5c8a;
+  --cyan: #46e0ff;
+  --ion: #8affd6;
+  --star: #f4f6ff;
+  --muted: #9aa3d0;
+  --muted-2: #6b7299;
+  --line: rgba(146, 160, 255, 0.14);
+
+  --grad-cosmic: linear-gradient(135deg, #6d5cf5 0%, #a24bff 50%, #ff5c8a 100%);
+  --grad-ion: linear-gradient(120deg, #46e0ff, #8affd6);
+  --grad-deep: radial-gradient(ellipse at 50% -10%, #1a1f4a 0%, #0a0d1f 45%, #05060f 100%);
+
+  --font-display: "Sora", system-ui, sans-serif;
+  --font-serif: "Instrument Serif", Georgia, serif;
+
+  --shadow-glow: 0 0 40px rgba(109, 92, 245, 0.35);
+  --shadow-lg: 0 40px 90px rgba(0, 0, 0, 0.6);
+  --ease-out: cubic-bezier(0.16, 1, 0.3, 1);
+
+  --radius: 20px;
+  --maxw: 1260px;
+}
+
+/* ---------- Reset ---------- */
+*, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+html { scroll-behavior: smooth; -webkit-font-smoothing: antialiased; }
+body {
+  font-family: var(--font-display);
+  background: var(--void);
+  color: var(--star);
+  line-height: 1.6;
+  overflow-x: hidden;
+  cursor: none;
+}
+img { max-width: 100%; display: block; }
+a { color: inherit; text-decoration: none; }
+button { font-family: inherit; cursor: none; border: none; background: none; color: inherit; }
+ul { list-style: none; }
+::selection { background: var(--nebula); color: var(--star); }
+
+/* ---------- Star field canvas ---------- */
+#starfield { position: fixed; inset: 0; z-index: 0; pointer-events: none; }
+
+/* ---------- Custom cursor ---------- */
+.cursor-dot, .cursor-ring { position: fixed; top: 0; left: 0; border-radius: 50%; pointer-events: none; z-index: 9999; transform: translate(-50%, -50%); }
+.cursor-dot { width: 6px; height: 6px; background: var(--cyan); box-shadow: 0 0 10px var(--cyan); transition: transform 0.12s var(--ease-out); }
+.cursor-ring { width: 40px; height: 40px; border: 1.5px solid rgba(70, 224, 255, 0.6); transition: transform 0.22s var(--ease-out), width 0.22s var(--ease-out), height 0.22s var(--ease-out), border-color 0.22s; }
+.cursor-ring.hovering { width: 70px; height: 70px; border-color: var(--plasma); background: rgba(255, 92, 138, 0.08); }
+.cursor-ring.clicking { transform: translate(-50%, -50%) scale(0.7); }
+@media (max-width: 900px) {
+  body { cursor: auto; }
+  .cursor-dot, .cursor-ring { display: none; }
+  button, a { cursor: pointer; }
+}
+
+/* ---------- Scroll progress ---------- */
+.scroll-progress { position: fixed; top: 0; left: 0; height: 3px; width: 0%; background: var(--grad-ion); z-index: 9000; box-shadow: 0 0 14px rgba(70, 224, 255, 0.7); }
+
+/* ---------- Layout ---------- */
+.container { width: 100%; max-width: var(--maxw); margin: 0 auto; padding: 0 28px; position: relative; z-index: 2; }
+.section { padding: 130px 0; position: relative; z-index: 2; }
+.eyebrow {
+  font-size: 0.76rem; letter-spacing: 0.32em; text-transform: uppercase; font-weight: 600;
+  color: var(--cyan); display: inline-flex; align-items: center; gap: 12px;
+}
+.eyebrow::before { content: ""; width: 30px; height: 1px; background: var(--grad-ion); display: inline-block; }
+.section-title {
+  font-family: var(--font-display); font-weight: 700; line-height: 1.05;
+  font-size: clamp(2.2rem, 5.2vw, 4.2rem); letter-spacing: -0.03em; margin: 20px 0 22px;
+}
+.section-title .serif { font-family: var(--font-serif); font-weight: 400; font-style: italic; background: var(--grad-cosmic); -webkit-background-clip: text; background-clip: text; color: transparent; }
+.lead { font-size: 1.12rem; color: var(--muted); max-width: 58ch; }
+
+/* ---------- Reveal ---------- */
+.reveal { opacity: 0; transform: translateY(42px); transition: opacity 1s var(--ease-out), transform 1s var(--ease-out); }
+.reveal.in { opacity: 1; transform: none; }
+.reveal.d1 { transition-delay: 0.08s; }
+.reveal.d2 { transition-delay: 0.16s; }
+.reveal.d3 { transition-delay: 0.24s; }
+.reveal.d4 { transition-delay: 0.32s; }
+.reveal.d5 { transition-delay: 0.40s; }
+
+/* ---------- Navigation ---------- */
+.nav { position: fixed; top: 0; left: 0; width: 100%; z-index: 800; padding: 22px 0; transition: background 0.4s, padding 0.4s, border-color 0.4s; border-bottom: 1px solid transparent; }
+.nav.scrolled { background: rgba(10, 13, 31, 0.72); backdrop-filter: blur(18px); padding: 13px 0; border-color: var(--line); }
+.nav-inner { display: flex; align-items: center; justify-content: space-between; }
+.brand { display: flex; align-items: center; gap: 12px; font-weight: 700; font-size: 1.32rem; letter-spacing: -0.01em; }
+.brand-mark { width: 38px; height: 38px; position: relative; display: grid; place-items: center; }
+.brand-mark .ring { position: absolute; inset: 0; border-radius: 50%; border: 1.5px solid var(--cyan); opacity: 0.5; }
+.brand-mark .ring.r2 { transform: rotate(60deg) scaleY(0.4); border-color: var(--plasma); }
+.brand-mark .core { width: 12px; height: 12px; border-radius: 50%; background: var(--grad-cosmic); box-shadow: 0 0 14px var(--nebula); }
+.nav-links { display: flex; align-items: center; gap: 34px; }
+.nav-links a { font-size: 0.92rem; font-weight: 500; color: var(--muted); position: relative; padding: 4px 0; transition: color 0.3s; }
+.nav-links a:hover { color: var(--star); }
+.nav-links a::after { content: ""; position: absolute; left: 0; bottom: -2px; width: 0; height: 1.5px; background: var(--grad-ion); transition: width 0.35s var(--ease-out); }
+.nav-links a:hover::after { width: 100%; }
+.nav-cta { padding: 11px 24px; border-radius: 100px; background: var(--grad-cosmic); color: var(--star); font-weight: 600; font-size: 0.9rem; transition: transform 0.3s var(--ease-out), box-shadow 0.3s; box-shadow: 0 8px 24px rgba(109, 92, 245, 0.35); }
+.nav-cta:hover { transform: translateY(-3px); box-shadow: 0 14px 34px rgba(162, 75, 255, 0.5); }
+.nav-toggle { display: none; flex-direction: column; gap: 5px; }
+.nav-toggle span { width: 26px; height: 2px; background: var(--star); }
+@media (max-width: 900px) { .nav-links { display: none; } .nav-toggle { display: flex; } }
+
+/* ---------- Hero ---------- */
+.hero { min-height: 100vh; display: flex; align-items: center; position: relative; padding: 150px 0 100px; overflow: hidden; background: var(--grad-deep); }
+.hero-orbit { position: absolute; top: 50%; left: 50%; transform: translate(-50%, -50%); z-index: 1; pointer-events: none; }
+.orbit-ring { position: absolute; border-radius: 50%; border: 1px solid rgba(146, 160, 255, 0.12); top: 50%; left: 50%; transform: translate(-50%, -50%); }
+.orbit-ring.o1 { width: 620px; height: 620px; animation: spin 40s linear infinite; }
+.orbit-ring.o2 { width: 900px; height: 900px; animation: spin 70s linear infinite reverse; }
+.orbit-ring.o3 { width: 1200px; height: 1200px; animation: spin 100s linear infinite; }
+.orbit-ring .sat { position: absolute; top: -5px; left: 50%; width: 10px; height: 10px; border-radius: 50%; background: var(--cyan); box-shadow: 0 0 14px var(--cyan); }
+.orbit-ring.o2 .sat { background: var(--plasma); box-shadow: 0 0 14px var(--plasma); }
+.orbit-ring.o3 .sat { background: var(--ion); box-shadow: 0 0 14px var(--ion); }
+@keyframes spin { to { transform: translate(-50%, -50%) rotate(360deg); } }
+.hero-planet {
+  position: absolute; width: 340px; height: 340px; border-radius: 50%;
+  background: radial-gradient(circle at 34% 30%, #a24bff, #6d5cf5 40%, #241a5e 75%, #0a0d1f);
+  top: 50%; left: 50%; transform: translate(-50%, -50%); z-index: 1;
+  box-shadow: inset -30px -20px 60px rgba(0,0,0,0.6), 0 0 90px rgba(109, 92, 245, 0.5);
+  opacity: 0.9;
+}
+.hero-planet::after { content: ""; position: absolute; inset: -40px -90px; border-radius: 50%; border: 14px solid rgba(70, 224, 255, 0.18); transform: rotate(-24deg) scaleY(0.32); }
+
+.hero-inner { position: relative; z-index: 3; text-align: center; }
+.hero-badge {
+  display: inline-flex; align-items: center; gap: 10px; padding: 8px 18px; border-radius: 100px;
+  background: rgba(146, 160, 255, 0.08); border: 1px solid var(--line); font-size: 0.8rem;
+  letter-spacing: 0.12em; text-transform: uppercase; font-weight: 500; color: var(--muted); backdrop-filter: blur(6px);
+}
+.hero-badge .pulse { width: 8px; height: 8px; border-radius: 50%; background: var(--ion); box-shadow: 0 0 0 rgba(138,255,214,0.7); animation: pulse 2.2s infinite; }
+@keyframes pulse { 0% { box-shadow: 0 0 0 0 rgba(138,255,214,0.6); } 70% { box-shadow: 0 0 0 14px rgba(138,255,214,0); } 100% { box-shadow: 0 0 0 0 rgba(138,255,214,0); } }
+.hero h1 { font-family: var(--font-display); font-weight: 800; font-size: clamp(3rem, 8.5vw, 7rem); line-height: 0.98; letter-spacing: -0.045em; margin: 28px 0 26px; }
+.hero h1 .serif { font-family: var(--font-serif); font-weight: 400; font-style: italic; letter-spacing: -0.01em; background: var(--grad-cosmic); -webkit-background-clip: text; background-clip: text; color: transparent; }
+.hero .glow-word { position: relative; }
+.hero p.sub { font-size: 1.24rem; color: var(--muted); max-width: 52ch; margin: 0 auto 42px; }
+.hero-actions { display: flex; gap: 16px; flex-wrap: wrap; align-items: center; justify-content: center; }
+.btn { position: relative; display: inline-flex; align-items: center; gap: 12px; padding: 17px 34px; border-radius: 100px; font-weight: 600; font-size: 1rem; transition: transform 0.35s var(--ease-out), box-shadow 0.35s; overflow: hidden; }
+.btn-primary { background: var(--grad-cosmic); color: var(--star); box-shadow: 0 14px 40px rgba(109, 92, 245, 0.45); }
+.btn-primary::after { content: ""; position: absolute; top: 0; left: -120%; width: 60%; height: 100%; background: linear-gradient(120deg, transparent, rgba(255,255,255,0.4), transparent); transition: left 0.6s var(--ease-out); }
+.btn-primary:hover::after { left: 130%; }
+.btn:hover { transform: translateY(-4px); }
+.btn-ghost { border: 1.5px solid var(--line); color: var(--star); background: rgba(146,160,255,0.04); }
+.btn-ghost:hover { border-color: var(--cyan); background: rgba(70,224,255,0.08); }
+.btn .arrow { transition: transform 0.3s var(--ease-out); }
+.btn:hover .arrow { transform: translateX(5px); }
+.hero-metrics { display: flex; gap: 48px; justify-content: center; margin-top: 64px; flex-wrap: wrap; }
+.hero-metric .num { font-family: var(--font-display); font-weight: 700; font-size: 2.4rem; background: var(--grad-ion); -webkit-background-clip: text; background-clip: text; color: transparent; line-height: 1; }
+.hero-metric .lbl { font-size: 0.78rem; text-transform: uppercase; letter-spacing: 0.16em; color: var(--muted-2); margin-top: 8px; }
+.scroll-hint { position: absolute; bottom: 30px; left: 50%; transform: translateX(-50%); z-index: 4; display: flex; flex-direction: column; align-items: center; gap: 8px; font-size: 0.72rem; letter-spacing: 0.2em; text-transform: uppercase; color: var(--muted-2); }
+.scroll-hint .mouse { width: 24px; height: 38px; border: 1.5px solid var(--muted-2); border-radius: 14px; position: relative; }
+.scroll-hint .mouse::after { content: ""; position: absolute; top: 7px; left: 50%; transform: translateX(-50%); width: 4px; height: 8px; background: var(--cyan); border-radius: 2px; animation: scrollDot 1.8s infinite; }
+@keyframes scrollDot { 0% { opacity: 0; top: 7px; } 40% { opacity: 1; } 80% { opacity: 0; top: 20px; } 100% { opacity: 0; } }
+
+/* ---------- Logo strip ---------- */
+.logos { border-top: 1px solid var(--line); border-bottom: 1px solid var(--line); padding: 34px 0; background: rgba(10, 13, 31, 0.4); }
+.logos-inner { display: flex; align-items: center; justify-content: center; gap: 12px; flex-wrap: wrap; }
+.logos .label { font-size: 0.78rem; letter-spacing: 0.2em; text-transform: uppercase; color: var(--muted-2); margin-right: 20px; }
+.logo-item { font-weight: 700; font-size: 1.1rem; color: var(--muted); letter-spacing: -0.01em; padding: 8px 20px; opacity: 0.7; transition: opacity 0.3s, color 0.3s, transform 0.3s; display: inline-flex; align-items: center; gap: 8px; }
+.logo-item:hover { opacity: 1; color: var(--star); transform: translateY(-3px); }
+
+/* ---------- Missions / fleet ---------- */
+.missions { background: var(--void); }
+.section-head { display: flex; align-items: flex-end; justify-content: space-between; gap: 40px; flex-wrap: wrap; margin-bottom: 66px; }
+.fleet-grid { display: grid; grid-template-columns: repeat(3, 1fr); gap: 26px; }
+.fleet-card {
+  position: relative; border-radius: var(--radius); padding: 34px 30px; overflow: hidden;
+  background: linear-gradient(160deg, rgba(22,26,58,0.9), rgba(10,13,31,0.9));
+  border: 1px solid var(--line); transition: transform 0.5s var(--ease-out), border-color 0.5s;
+  transform-style: preserve-3d;
+}
+.fleet-card:hover { transform: translateY(-12px); border-color: rgba(109,92,245,0.5); }
+.fleet-card .glow { position: absolute; width: 260px; height: 260px; border-radius: 50%; filter: blur(60px); opacity: 0; transition: opacity 0.5s; top: -80px; right: -60px; pointer-events: none; }
+.fleet-card:hover .glow { opacity: 0.6; }
+.fleet-num { font-family: var(--font-serif); font-style: italic; font-size: 1.1rem; color: var(--muted-2); }
+.fleet-ship { height: 150px; display: grid; place-items: center; margin: 10px 0 22px; position: relative; }
+.rocket { font-size: 4.4rem; filter: drop-shadow(0 0 18px rgba(109,92,245,0.6)); transition: transform 0.6s var(--ease-out); }
+.fleet-card:hover .rocket { transform: translateY(-10px) rotate(-8deg) scale(1.1); }
+.fleet-card h3 { font-size: 1.7rem; font-weight: 700; letter-spacing: -0.02em; margin-bottom: 6px; }
+.fleet-card .tagline { color: var(--cyan); font-size: 0.86rem; letter-spacing: 0.05em; text-transform: uppercase; margin-bottom: 18px; }
+.spec-row { display: flex; justify-content: space-between; padding: 12px 0; border-top: 1px solid var(--line); font-size: 0.92rem; }
+.spec-row .k { color: var(--muted-2); }
+.spec-row .v { color: var(--star); font-weight: 600; }
+.fleet-status { display: inline-flex; align-items: center; gap: 8px; margin-top: 20px; font-size: 0.84rem; color: var(--ion); }
+.fleet-status .dot { width: 8px; height: 8px; border-radius: 50%; background: var(--ion); box-shadow: 0 0 10px var(--ion); }
+@media (max-width: 900px) { .fleet-grid { grid-template-columns: 1fr; max-width: 460px; margin: 0 auto; } }
+
+/* ---------- Experience / timeline ---------- */
+.experience { background: var(--grad-deep); }
+.exp-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 70px; align-items: center; }
+.exp-visual { position: relative; aspect-ratio: 1; border-radius: 26px; overflow: hidden; background: radial-gradient(circle at 50% 40%, #1a1f4a, #0a0d1f 70%); border: 1px solid var(--line); display: grid; place-items: center; box-shadow: var(--shadow-lg); }
+.exp-visual .capsule {
+  width: 180px; height: 220px; border-radius: 90px 90px 40px 40px; position: relative;
+  background: linear-gradient(160deg, #2a3170, #10132b); border: 2px solid rgba(146,160,255,0.25);
+  box-shadow: inset 0 20px 40px rgba(70,224,255,0.1), 0 0 60px rgba(109,92,245,0.4);
+  animation: bob 5s ease-in-out infinite;
+}
+@keyframes bob { 0%,100% { transform: translateY(0); } 50% { transform: translateY(-16px); } }
+.capsule .window { position: absolute; top: 44px; left: 50%; transform: translateX(-50%); width: 92px; height: 92px; border-radius: 50%; background: radial-gradient(circle at 40% 40%, #46e0ff, #6d5cf5 60%, #241a5e); box-shadow: inset 0 0 20px rgba(0,0,0,0.5), 0 0 24px rgba(70,224,255,0.5); }
+.capsule .fin { position: absolute; bottom: 6px; width: 30px; height: 60px; background: linear-gradient(160deg,#a24bff,#6d5cf5); border-radius: 6px; }
+.capsule .fin.l { left: -18px; transform: skewX(12deg); }
+.capsule .fin.r { right: -18px; transform: skewX(-12deg); }
+.exp-visual .exp-orbit { position: absolute; width: 320px; height: 320px; border-radius: 50%; border: 1px dashed rgba(146,160,255,0.2); animation: spin 24s linear infinite; }
+.exp-visual .exp-orbit .moon { position: absolute; top: -8px; left: 50%; width: 16px; height: 16px; border-radius: 50%; background: var(--ion); box-shadow: 0 0 16px var(--ion); }
+.exp-steps { display: grid; gap: 8px; }
+.exp-step { display: flex; gap: 22px; padding: 22px; border-radius: 16px; transition: background 0.4s var(--ease-out), transform 0.4s; border: 1px solid transparent; cursor: none; }
+.exp-step:hover { background: rgba(146,160,255,0.05); border-color: var(--line); transform: translateX(6px); }
+.exp-step .st-num { flex-shrink: 0; width: 46px; height: 46px; border-radius: 12px; background: linear-gradient(160deg, rgba(109,92,245,0.25), rgba(162,75,255,0.1)); border: 1px solid rgba(109,92,245,0.4); display: grid; place-items: center; font-weight: 700; color: var(--cyan); }
+.exp-step h4 { font-size: 1.2rem; margin-bottom: 4px; }
+.exp-step p { color: var(--muted); font-size: 0.95rem; }
+@media (max-width: 900px) { .exp-grid { grid-template-columns: 1fr; gap: 50px; } }
+
+/* ---------- Destinations ---------- */
+.destinations { background: var(--void); }
+.dest-grid { display: grid; grid-template-columns: repeat(12, 1fr); gap: 22px; margin-top: 60px; }
+.dest { position: relative; border-radius: var(--radius); overflow: hidden; min-height: 320px; display: flex; align-items: flex-end; padding: 32px; border: 1px solid var(--line); transition: transform 0.5s var(--ease-out); }
+.dest::before { content: ""; position: absolute; inset: 0; opacity: 0.85; transition: transform 0.7s var(--ease-out); }
+.dest::after { content: ""; position: absolute; inset: 0; background: linear-gradient(transparent 30%, rgba(5,6,15,0.92)); }
+.dest:hover { transform: translateY(-8px); }
+.dest:hover::before { transform: scale(1.08); }
+.dest.big { grid-column: span 7; }
+.dest.small { grid-column: span 5; }
+.dest.third { grid-column: span 4; }
+.d-suborbital::before { background: radial-gradient(circle at 30% 30%, #46e0ff, #6d5cf5 55%, #10132b); }
+.d-orbital::before { background: radial-gradient(circle at 60% 30%, #a24bff, #241a5e 60%, #0a0d1f); }
+.d-lunar::before { background: radial-gradient(circle at 40% 40%, #c9d2ff, #6b7299 45%, #10132b 80%); }
+.d-station::before { background: radial-gradient(circle at 50% 40%, #ff5c8a, #6d5cf5 55%, #0a0d1f); }
+.d-deep::before { background: radial-gradient(circle at 40% 50%, #8affd6, #46e0ff 40%, #241a5e 80%); }
+.dest-body { position: relative; z-index: 2; }
+.dest-body .tag { display: inline-block; font-size: 0.72rem; letter-spacing: 0.12em; text-transform: uppercase; padding: 5px 12px; border-radius: 100px; background: rgba(5,6,15,0.5); border: 1px solid rgba(146,160,255,0.3); margin-bottom: 14px; backdrop-filter: blur(6px); }
+.dest-body h3 { font-size: 2rem; font-weight: 700; letter-spacing: -0.02em; margin-bottom: 8px; }
+.dest-body p { color: var(--muted); font-size: 0.96rem; max-width: 40ch; }
+.dest-body .altitude { margin-top: 14px; font-family: var(--font-serif); font-style: italic; font-size: 1.3rem; color: var(--cyan); }
+@media (max-width: 900px) { .dest-grid { grid-template-columns: 1fr; } .dest.big, .dest.small, .dest.third { grid-column: 1; } }
+
+/* ---------- Stats band ---------- */
+.stats-band { padding: 100px 0; background: linear-gradient(180deg, #0a0d1f, #10132b); border-top: 1px solid var(--line); border-bottom: 1px solid var(--line); }
+.stats-row { display: grid; grid-template-columns: repeat(4, 1fr); gap: 30px; text-align: center; }
+.stat-big { font-family: var(--font-display); font-weight: 800; font-size: clamp(2.6rem, 6vw, 4.6rem); background: var(--grad-cosmic); -webkit-background-clip: text; background-clip: text; color: transparent; line-height: 1; }
+.stat-lbl { margin-top: 12px; font-size: 0.84rem; letter-spacing: 0.14em; text-transform: uppercase; color: var(--muted-2); }
+@media (max-width: 640px) { .stats-row { grid-template-columns: 1fr 1fr; gap: 46px; } }
+
+/* ---------- Pricing / seats ---------- */
+.pricing { background: var(--grad-deep); }
+.tier-grid { display: grid; grid-template-columns: repeat(3, 1fr); gap: 26px; margin-top: 60px; }
+.tier { position: relative; border-radius: var(--radius); padding: 40px 34px; background: linear-gradient(160deg, rgba(22,26,58,0.7), rgba(10,13,31,0.9)); border: 1px solid var(--line); overflow: hidden; transition: transform 0.5s var(--ease-out), border-color 0.5s; }
+.tier:hover { transform: translateY(-14px); border-color: rgba(70,224,255,0.5); }
+.tier.featured { border-color: rgba(162,75,255,0.6); background: linear-gradient(160deg, rgba(50,32,100,0.6), rgba(10,13,31,0.9)); }
+.tier.featured::before { content: "Flagship"; position: absolute; top: 24px; right: -36px; transform: rotate(45deg); background: var(--grad-cosmic); color: var(--star); font-size: 0.72rem; font-weight: 700; padding: 6px 48px; letter-spacing: 0.08em; text-transform: uppercase; }
+.tier h3 { font-size: 1.7rem; font-weight: 700; margin-bottom: 6px; }
+.tier .t-sub { color: var(--muted); font-size: 0.94rem; margin-bottom: 24px; }
+.tier .t-price { font-family: var(--font-display); font-weight: 800; font-size: 2.8rem; line-height: 1; margin-bottom: 6px; }
+.tier .t-price span { font-size: 1rem; color: var(--muted-2); font-weight: 400; }
+.tier ul { margin: 26px 0 32px; display: grid; gap: 13px; }
+.tier li { display: flex; align-items: center; gap: 12px; font-size: 0.95rem; color: var(--muted); }
+.tier li .check { width: 22px; height: 22px; border-radius: 50%; background: rgba(70,224,255,0.14); color: var(--cyan); display: grid; place-items: center; font-size: 0.78rem; flex-shrink: 0; }
+.tier .tier-btn { width: 100%; padding: 16px; border-radius: 100px; font-weight: 600; font-size: 1rem; background: rgba(146,160,255,0.08); color: var(--star); border: 1px solid var(--line); transition: transform 0.35s var(--ease-out), background 0.35s; }
+.tier.featured .tier-btn { background: var(--grad-cosmic); border: none; }
+.tier .tier-btn:hover { transform: translateY(-3px); background: rgba(146,160,255,0.16); }
+.tier.featured .tier-btn:hover { box-shadow: 0 12px 30px rgba(162,75,255,0.5); }
+@media (max-width: 900px) { .tier-grid { grid-template-columns: 1fr; max-width: 440px; margin: 60px auto 0; } }
+
+/* ---------- Countdown ---------- */
+.countdown { background: var(--void); text-align: center; }
+.count-box { display: flex; gap: 20px; justify-content: center; margin-top: 44px; flex-wrap: wrap; }
+.count-unit { min-width: 130px; padding: 28px 20px; border-radius: 18px; background: linear-gradient(160deg, rgba(22,26,58,0.8), rgba(10,13,31,0.9)); border: 1px solid var(--line); position: relative; overflow: hidden; }
+.count-unit::before { content: ""; position: absolute; top: 0; left: 0; width: 100%; height: 3px; background: var(--grad-ion); }
+.count-unit .cn { font-family: var(--font-display); font-weight: 800; font-size: 3.4rem; line-height: 1; background: var(--grad-ion); -webkit-background-clip: text; background-clip: text; color: transparent; font-variant-numeric: tabular-nums; }
+.count-unit .cl { margin-top: 8px; font-size: 0.76rem; letter-spacing: 0.16em; text-transform: uppercase; color: var(--muted-2); }
+@media (max-width: 560px) { .count-unit { min-width: 40%; } }
+
+/* ---------- Testimonials ---------- */
+.voices { background: var(--grad-deep); }
+.voices-grid { display: grid; grid-template-columns: repeat(3, 1fr); gap: 24px; margin-top: 60px; }
+.voice { border-radius: var(--radius); padding: 32px; background: linear-gradient(160deg, rgba(22,26,58,0.6), rgba(10,13,31,0.85)); border: 1px solid var(--line); transition: transform 0.4s var(--ease-out), border-color 0.4s; }
+.voice:hover { transform: translateY(-8px); border-color: rgba(255,92,138,0.4); }
+.voice .stars { color: var(--plasma); letter-spacing: 2px; font-size: 0.9rem; margin-bottom: 14px; }
+.voice p { font-size: 1.02rem; color: var(--star); margin-bottom: 24px; }
+.voice-who { display: flex; align-items: center; gap: 14px; }
+.voice-av { width: 48px; height: 48px; border-radius: 50%; background: var(--grad-cosmic); display: grid; place-items: center; font-weight: 700; }
+.voice-who .n { font-weight: 600; }
+.voice-who .r { font-size: 0.82rem; color: var(--muted-2); }
+@media (max-width: 900px) { .voices-grid { grid-template-columns: 1fr; } }
+
+/* ---------- FAQ ---------- */
+.faq { background: var(--void); }
+.faq-list { max-width: 800px; margin: 56px auto 0; }
+.faq-item { border-bottom: 1px solid var(--line); }
+.faq-q { width: 100%; text-align: left; padding: 26px 0; display: flex; align-items: center; justify-content: space-between; gap: 20px; font-size: 1.18rem; font-weight: 600; color: var(--star); transition: color 0.3s; }
+.faq-q:hover { color: var(--cyan); }
+.faq-q .ic { flex-shrink: 0; width: 34px; height: 34px; border-radius: 50%; border: 1px solid var(--line); display: grid; place-items: center; font-size: 1.2rem; transition: transform 0.4s var(--ease-out), background 0.4s, border-color 0.4s; }
+.faq-item.open .faq-q .ic { transform: rotate(135deg); background: var(--grad-cosmic); border-color: transparent; }
+.faq-a { max-height: 0; overflow: hidden; transition: max-height 0.5s var(--ease-out); }
+.faq-a p { padding: 0 0 26px; color: var(--muted); font-size: 1rem; max-width: 66ch; }
+
+/* ---------- Final CTA ---------- */
+.launch-cta { background: var(--void); }
+.launch-box { position: relative; border-radius: 32px; padding: 84px 60px; text-align: center; overflow: hidden; background: linear-gradient(160deg, #1a1f4a, #0a0d1f); border: 1px solid rgba(109,92,245,0.4); box-shadow: var(--shadow-lg); }
+.launch-box::before { content: ""; position: absolute; width: 500px; height: 500px; border-radius: 50%; background: radial-gradient(circle, rgba(109,92,245,0.4), transparent 70%); top: -200px; left: 50%; transform: translateX(-50%); filter: blur(30px); }
+.launch-box .inner { position: relative; z-index: 2; }
+.launch-box h2 { font-family: var(--font-display); font-weight: 800; font-size: clamp(2.2rem, 5.5vw, 4rem); letter-spacing: -0.03em; margin-bottom: 16px; }
+.launch-box h2 .serif { font-family: var(--font-serif); font-style: italic; font-weight: 400; background: var(--grad-ion); -webkit-background-clip: text; background-clip: text; color: transparent; }
+.launch-box p { color: var(--muted); font-size: 1.14rem; margin-bottom: 36px; max-width: 50ch; margin-left: auto; margin-right: auto; }
+.launch-form { display: flex; gap: 12px; max-width: 500px; margin: 0 auto; }
+.launch-form input { flex: 1; padding: 17px 24px; border-radius: 100px; border: 1px solid var(--line); background: rgba(146,160,255,0.06); font-family: inherit; font-size: 1rem; color: var(--star); transition: border-color 0.3s, background 0.3s; }
+.launch-form input::placeholder { color: var(--muted-2); }
+.launch-form input:focus { outline: none; border-color: var(--cyan); background: rgba(70,224,255,0.06); }
+.launch-form button { padding: 17px 32px; border-radius: 100px; background: var(--grad-cosmic); color: var(--star); font-weight: 600; transition: transform 0.3s var(--ease-out); }
+.launch-form button:hover { transform: scale(1.05); }
+.launch-note { margin-top: 16px; font-size: 0.84rem; color: var(--muted-2); }
+@media (max-width: 560px) { .launch-form { flex-direction: column; } .launch-box { padding: 56px 26px; } }
+
+/* ---------- Footer ---------- */
+.footer { background: var(--deep); border-top: 1px solid var(--line); padding: 80px 0 34px; }
+.footer-grid { display: grid; grid-template-columns: 1.6fr 1fr 1fr 1fr; gap: 40px; margin-bottom: 56px; }
+.footer-brand p { color: var(--muted-2); margin: 18px 0 24px; max-width: 34ch; font-size: 0.96rem; }
+.socials { display: flex; gap: 12px; }
+.socials a { width: 42px; height: 42px; border-radius: 50%; border: 1px solid var(--line); display: grid; place-items: center; font-size: 1rem; color: var(--muted); transition: transform 0.3s var(--ease-out), background 0.3s, color 0.3s, border-color 0.3s; }
+.socials a:hover { transform: translateY(-4px); background: var(--grad-cosmic); border-color: transparent; color: var(--star); }
+.footer-col h5 { font-size: 1rem; margin-bottom: 18px; color: var(--star); }
+.footer-col a { display: block; color: var(--muted-2); margin-bottom: 12px; font-size: 0.94rem; transition: color 0.3s, transform 0.3s; }
+.footer-col a:hover { color: var(--cyan); transform: translateX(5px); }
+.footer-bottom { display: flex; align-items: center; justify-content: space-between; padding-top: 30px; border-top: 1px solid var(--line); flex-wrap: wrap; gap: 16px; font-size: 0.86rem; color: var(--muted-2); }
+@media (max-width: 760px) { .footer-grid { grid-template-columns: 1fr 1fr; } }
+@media (max-width: 480px) { .footer-grid { grid-template-columns: 1fr; } }
+
+/* ---------- Back to top ---------- */
+.to-top { position: fixed; bottom: 28px; right: 28px; width: 54px; height: 54px; border-radius: 50%; background: var(--panel-2); border: 1px solid var(--line); color: var(--star); display: grid; place-items: center; font-size: 1.3rem; z-index: 700; opacity: 0; transform: translateY(20px); transition: opacity 0.4s, transform 0.4s, background 0.3s; }
+.to-top.show { opacity: 1; transform: none; }
+.to-top:hover { background: var(--nebula); transform: translateY(-4px); }
+</style>
+</head>
+<body>
+
+<!-- Starfield -->
+<canvas id="starfield"></canvas>
+
+<!-- Custom cursor -->
+<div class="cursor-dot" id="cursorDot"></div>
+<div class="cursor-ring" id="cursorRing"></div>
+
+<!-- Scroll progress -->
+<div class="scroll-progress" id="scrollProgress"></div>
+
+<!-- Navigation -->
+<nav class="nav" id="nav">
+  <div class="container nav-inner">
+    <a href="#top" class="brand">
+      <span class="brand-mark"><span class="ring"></span><span class="ring r2"></span><span class="core"></span></span>
+      Aphelion
+    </a>
+    <ul class="nav-links">
+      <li><a href="#fleet">Fleet</a></li>
+      <li><a href="#experience">Experience</a></li>
+      <li><a href="#destinations">Destinations</a></li>
+      <li><a href="#pricing">Seats</a></li>
+      <li><a href="#faq">FAQ</a></li>
+    </ul>
+    <a href="#pricing" class="nav-cta" data-cursor>Reserve a seat</a>
+    <button class="nav-toggle" id="navToggle" aria-label="Menu"><span></span><span></span><span></span></button>
+  </div>
+</nav>
+
+<!-- Hero -->
+<header class="hero" id="top">
+  <div class="hero-orbit">
+    <div class="orbit-ring o1"><span class="sat"></span></div>
+    <div class="orbit-ring o2"><span class="sat"></span></div>
+    <div class="orbit-ring o3"><span class="sat"></span></div>
+  </div>
+  <div class="hero-planet" data-parallax="0.15"></div>
+  <div class="container hero-inner">
+    <div class="hero-badge"><span class="pulse"></span> Next civilian launch window · T-minus 42 days</div>
+    <h1>
+      Your seat to<br />
+      the <span class="serif">edge of space.</span>
+    </h1>
+    <p class="sub">Aphelion is private spaceflight built for the civilian era — human-rated capsules, week-long astronaut training, and a view that rewrites everything you thought you knew.</p>
+    <div class="hero-actions">
+      <a href="#pricing" class="btn btn-primary" data-cursor>Reserve your flight <span class="arrow">→</span></a>
+      <a href="#experience" class="btn btn-ghost" data-cursor>See the experience</a>
+    </div>
+    <div class="hero-metrics">
+      <div class="hero-metric"><div class="num" data-count="327">0</div><div class="lbl">Astronauts flown</div></div>
+      <div class="hero-metric"><div class="num" data-count="100" data-suffix="km">0</div><div class="lbl">Kármán line reached</div></div>
+      <div class="hero-metric"><div class="num" data-count="41">0</div><div class="lbl">Successful launches</div></div>
+    </div>
+  </div>
+  <div class="scroll-hint"><div class="mouse"></div>Scroll to explore</div>
+</header>
+
+<!-- Logo strip -->
+<div class="logos">
+  <div class="container logos-inner">
+    <span class="label">Trusted by partners at</span>
+    <span class="logo-item" data-cursor>◇ Orbital Dynamics</span>
+    <span class="logo-item" data-cursor>✦ Helios Labs</span>
+    <span class="logo-item" data-cursor>◎ Vantage Aerospace</span>
+    <span class="logo-item" data-cursor>△ Meridian Group</span>
+    <span class="logo-item" data-cursor>❋ NovaWorks</span>
+  </div>
+</div>
+
+<!-- Fleet -->
+<section class="section missions" id="fleet">
+  <div class="container">
+    <div class="section-head">
+      <div>
+        <span class="eyebrow reveal">The Fleet</span>
+        <h2 class="section-title reveal d1">Spacecraft built to <span class="serif">carry dreamers.</span></h2>
+      </div>
+      <p class="lead reveal d2">Three human-rated vehicles, each engineered for a different frontier — from a taste of weightlessness to multi-day orbital stays.</p>
+    </div>
+    <div class="fleet-grid">
+      <article class="fleet-card reveal d1" data-tilt>
+        <div class="glow" style="background:radial-gradient(circle,#46e0ff,transparent 70%)"></div>
+        <div class="fleet-num">Vehicle 01</div>
+        <div class="fleet-ship"><span class="rocket">🚀</span></div>
+        <h3>Skylark</h3>
+        <div class="tagline">Suborbital · 6 seats</div>
+        <div class="spec-row"><span class="k">Apogee</span><span class="v">106 km</span></div>
+        <div class="spec-row"><span class="k">Weightlessness</span><span class="v">4 minutes</span></div>
+        <div class="spec-row"><span class="k">Flight time</span><span class="v">~15 minutes</span></div>
+        <div class="spec-row"><span class="k">G-force peak</span><span class="v">3.5 G</span></div>
+        <div class="fleet-status"><span class="dot"></span> Flying weekly</div>
+      </article>
+      <article class="fleet-card reveal d2" data-tilt>
+        <div class="glow" style="background:radial-gradient(circle,#a24bff,transparent 70%)"></div>
+        <div class="fleet-num">Vehicle 02</div>
+        <div class="fleet-ship"><span class="rocket">🛸</span></div>
+        <h3>Meridian</h3>
+        <div class="tagline">Orbital · 4 seats</div>
+        <div class="spec-row"><span class="k">Altitude</span><span class="v">420 km</span></div>
+        <div class="spec-row"><span class="k">Orbits</span><span class="v">Up to 48</span></div>
+        <div class="spec-row"><span class="k">Mission length</span><span class="v">3 days</span></div>
+        <div class="spec-row"><span class="k">Cupola view</span><span class="v">360°</span></div>
+        <div class="fleet-status"><span class="dot"></span> Boarding 2026</div>
+      </article>
+      <article class="fleet-card reveal d3" data-tilt>
+        <div class="glow" style="background:radial-gradient(circle,#ff5c8a,transparent 70%)"></div>
+        <div class="fleet-num">Vehicle 03</div>
+        <div class="fleet-ship"><span class="rocket">🌌</span></div>
+        <h3>Odyssey</h3>
+        <div class="tagline">Lunar flyby · 8 seats</div>
+        <div class="spec-row"><span class="k">Distance</span><span class="v">400,000 km</span></div>
+        <div class="spec-row"><span class="k">Closest approach</span><span class="v">200 km</span></div>
+        <div class="spec-row"><span class="k">Mission length</span><span class="v">6 days</span></div>
+        <div class="spec-row"><span class="k">First flight</span><span class="v">2028</span></div>
+        <div class="fleet-status"><span class="dot"></span> Reservations open</div>
+      </article>
+    </div>
+  </div>
+</section>
+
+<!-- Experience -->
+<section class="section experience" id="experience">
+  <div class="container">
+    <div class="exp-grid">
+      <div class="exp-visual reveal">
+        <div class="exp-orbit"><span class="moon"></span></div>
+        <div class="capsule">
+          <span class="window"></span>
+          <span class="fin l"></span>
+          <span class="fin r"></span>
+        </div>
+      </div>
+      <div>
+        <span class="eyebrow reveal">The Experience</span>
+        <h2 class="section-title reveal d1">From ground crew to <span class="serif">astronaut.</span></h2>
+        <p class="lead reveal d2" style="margin-bottom:34px;">Every Aphelion journey is a full week — because the launch is only the beginning. Here's how your mission unfolds.</p>
+        <div class="exp-steps">
+          <div class="exp-step reveal d1">
+            <div class="st-num">01</div>
+            <div><h4>Astronaut Training</h4><p>Four days of centrifuge sessions, zero-G flights, and mission simulations at our desert campus.</p></div>
+          </div>
+          <div class="exp-step reveal d2">
+            <div class="st-num">02</div>
+            <div><h4>Launch Day</h4><p>Suit up, strap in, and feel three-and-a-half G's press you into your seat as the engines light.</p></div>
+          </div>
+          <div class="exp-step reveal d3">
+            <div class="st-num">03</div>
+            <div><h4>The Overview</h4><p>Unbuckle in weightlessness and float to the window for the view astronauts call life-changing.</p></div>
+          </div>
+          <div class="exp-step reveal d4">
+            <div class="st-num">04</div>
+            <div><h4>Homecoming</h4><p>A guided re-entry, a soft landing, and a celebration with the crew who trained alongside you.</p></div>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+</section>
+
+<!-- Destinations -->
+<section class="section destinations" id="destinations">
+  <div class="container">
+    <div class="section-head">
+      <div>
+        <span class="eyebrow reveal">Destinations</span>
+        <h2 class="section-title reveal d1">Choose your <span class="serif">horizon.</span></h2>
+      </div>
+      <p class="lead reveal d2">Whether you want a taste of the black or a multi-day orbit around the planet, there's a mission with your name on it.</p>
+    </div>
+    <div class="dest-grid">
+      <div class="dest big d-suborbital reveal d1">
+        <div class="dest-body">
+          <span class="tag">Most Popular</span>
+          <h3>Suborbital Hop</h3>
+          <p>Cross the Kármán line, earn your astronaut wings, and float weightless above a curved blue horizon.</p>
+          <div class="altitude">106 km up</div>
+        </div>
+      </div>
+      <div class="dest small d-orbital reveal d2">
+        <div class="dest-body">
+          <span class="tag">Flagship</span>
+          <h3>Orbital Stay</h3>
+          <p>Circle Earth for three days aboard Meridian, chasing sixteen sunrises a day.</p>
+          <div class="altitude">420 km up</div>
+        </div>
+      </div>
+      <div class="dest third d-lunar reveal d1">
+        <div class="dest-body">
+          <span class="tag">2028</span>
+          <h3>Lunar Flyby</h3>
+          <p>Slingshot around the far side of the Moon.</p>
+          <div class="altitude">400,000 km</div>
+        </div>
+      </div>
+      <div class="dest third d-station reveal d2">
+        <div class="dest-body">
+          <span class="tag">New</span>
+          <h3>Station Dock</h3>
+          <p>Spend a week aboard the Aphelion Orbital Habitat.</p>
+          <div class="altitude">Low Earth Orbit</div>
+        </div>
+      </div>
+      <div class="dest third d-deep reveal d3">
+        <div class="dest-body">
+          <span class="tag">Concept</span>
+          <h3>Deep Field</h3>
+          <p>A private observation deck beyond the glare of Earth.</p>
+          <div class="altitude">Lagrange point</div>
+        </div>
+      </div>
+    </div>
+  </div>
+</section>
+
+<!-- Stats band -->
+<section class="stats-band">
+  <div class="container stats-row">
+    <div class="reveal d1"><div class="stat-big" data-count="327">0</div><div class="stat-lbl">Astronauts flown</div></div>
+    <div class="reveal d2"><div class="stat-big" data-count="41">0</div><div class="stat-lbl">Successful launches</div></div>
+    <div class="reveal d3"><div class="stat-big" data-count="100" data-suffix="%">0</div><div class="stat-lbl">Safe returns</div></div>
+    <div class="reveal d4"><div class="stat-big" data-count="9" data-suffix="hr">0</div><div class="stat-lbl">Total weightless time</div></div>
+  </div>
+</section>
+
+<!-- Pricing -->
+<section class="section pricing" id="pricing">
+  <div class="container">
+    <div style="text-align:center;">
+      <span class="eyebrow reveal" style="justify-content:center">Reserve a Seat</span>
+      <h2 class="section-title reveal d1">Book your <span class="serif">boarding pass.</span></h2>
+      <p class="lead reveal d2" style="margin:0 auto;">A refundable deposit holds your seat on an upcoming launch window. Full astronaut training included.</p>
+    </div>
+    <div class="tier-grid">
+      <div class="tier reveal d1">
+        <h3>Skylark</h3>
+        <p class="t-sub">Suborbital · 15-minute flight</p>
+        <div class="t-price">$95k<span> / seat</span></div>
+        <ul>
+          <li><span class="check">✓</span> 2-day astronaut training</li>
+          <li><span class="check">✓</span> 4 minutes of weightlessness</li>
+          <li><span class="check">✓</span> Astronaut wings &amp; flight suit</li>
+          <li><span class="check">✓</span> In-flight capture footage</li>
+        </ul>
+        <button class="tier-btn" data-cursor>Reserve Skylark</button>
+      </div>
+      <div class="tier featured reveal d2">
+        <h3>Meridian</h3>
+        <p class="t-sub">Orbital · 3-day mission</p>
+        <div class="t-price">$1.2M<span> / seat</span></div>
+        <ul>
+          <li><span class="check">✓</span> 4-day astronaut training</li>
+          <li><span class="check">✓</span> 3 days in orbit · 48 orbits</li>
+          <li><span class="check">✓</span> 360° cupola viewing sessions</li>
+          <li><span class="check">✓</span> Personal mission specialist</li>
+          <li><span class="check">✓</span> Full documentary package</li>
+        </ul>
+        <button class="tier-btn" data-cursor>Reserve Meridian</button>
+      </div>
+      <div class="tier reveal d3">
+        <h3>Odyssey</h3>
+        <p class="t-sub">Lunar flyby · 6-day mission</p>
+        <div class="t-price">Inquire<span> / seat</span></div>
+        <ul>
+          <li><span class="check">✓</span> 2-week astronaut training</li>
+          <li><span class="check">✓</span> Around the far side of the Moon</li>
+          <li><span class="check">✓</span> Private mission planning</li>
+          <li><span class="check">✓</span> Dedicated flight crew</li>
+        </ul>
+        <button class="tier-btn" data-cursor>Request an invite</button>
+      </div>
+    </div>
+  </div>
+</section>
+
+<!-- Countdown -->
+<section class="section countdown">
+  <div class="container">
+    <span class="eyebrow reveal" style="justify-content:center">Next Launch Window</span>
+    <h2 class="section-title reveal d1">Skylark Mission <span class="serif">S-42</span> lifts off in</h2>
+    <div class="count-box reveal d2">
+      <div class="count-unit"><div class="cn" id="cd-days">00</div><div class="cl">Days</div></div>
+      <div class="count-unit"><div class="cn" id="cd-hours">00</div><div class="cl">Hours</div></div>
+      <div class="count-unit"><div class="cn" id="cd-mins">00</div><div class="cl">Minutes</div></div>
+      <div class="count-unit"><div class="cn" id="cd-secs">00</div><div class="cl">Seconds</div></div>
+    </div>
+  </div>
+</section>
+
+<!-- Voices -->
+<section class="section voices">
+  <div class="container">
+    <div style="text-align:center;">
+      <span class="eyebrow reveal" style="justify-content:center">From the Crew</span>
+      <h2 class="section-title reveal d1">What it feels like to <span class="serif">leave Earth.</span></h2>
+    </div>
+    <div class="voices-grid">
+      <div class="voice reveal d1">
+        <div class="stars">★★★★★</div>
+        <p>"Nothing prepared me for that first look at the curve of the planet. The training was rigorous, the crew was flawless, and the four minutes of weightlessness rewired my brain."</p>
+        <div class="voice-who"><div class="voice-av">EN</div><div><div class="n">Elena Novak</div><div class="r">Skylark · Mission S-31</div></div></div>
+      </div>
+      <div class="voice reveal d2">
+        <div class="stars">★★★★★</div>
+        <p>"Three days in orbit changed how I see the world — literally and otherwise. Watching sixteen sunrises from the cupola is something I'll carry forever. Worth every mile."</p>
+        <div class="voice-who"><div class="voice-av">RK</div><div><div class="n">Ravi Kapoor</div><div class="r">Meridian · Orbital 12</div></div></div>
+      </div>
+      <div class="voice reveal d3">
+        <div class="stars">★★★★★</div>
+        <p>"I came for the adrenaline and left with perspective. The Aphelion team treats safety like a religion, and the overview effect is real. Book it before the waitlist grows."</p>
+        <div class="voice-who"><div class="voice-av">MS</div><div><div class="n">Maya Sorenson</div><div class="r">Skylark · Mission S-38</div></div></div>
+      </div>
+    </div>
+  </div>
+</section>
+
+<!-- FAQ -->
+<section class="section faq" id="faq">
+  <div class="container">
+    <div style="text-align:center;">
+      <span class="eyebrow reveal" style="justify-content:center">Before You Fly</span>
+      <h2 class="section-title reveal d1">Mission <span class="serif">questions.</span></h2>
+    </div>
+    <div class="faq-list">
+      <div class="faq-item reveal d1">
+        <button class="faq-q" data-cursor>Do I need to be an athlete to fly? <span class="ic">+</span></button>
+        <div class="faq-a"><p>No. Our suborbital flights are designed for healthy adults across a wide range of ages and fitness levels. You'll complete a medical screening and training program that prepares your body for the G-forces and weightlessness. Most of our astronauts are everyday people, not professional pilots.</p></div>
+      </div>
+      <div class="faq-item reveal d1">
+        <button class="faq-q" data-cursor>How long is the training? <span class="ic">+</span></button>
+        <div class="faq-a"><p>Suborbital missions include two days of training; orbital missions include four days; and lunar missions require roughly two weeks. Training covers centrifuge sessions, zero-G parabolic flights, emergency procedures, and full mission rehearsals at our desert campus.</p></div>
+      </div>
+      <div class="faq-item reveal d1">
+        <button class="faq-q" data-cursor>Is my deposit refundable? <span class="ic">+</span></button>
+        <div class="faq-a"><p>Yes. Your reservation deposit is fully refundable up until you begin your training program. After that, it converts to a mission credit that can be transferred to a future launch window if needed.</p></div>
+      </div>
+      <div class="faq-item reveal d1">
+        <button class="faq-q" data-cursor>What safety record does Aphelion have? <span class="ic">+</span></button>
+        <div class="faq-a"><p>Across 41 crewed launches we've maintained a 100% safe-return record. Every vehicle is human-rated, flight-tested extensively before carrying passengers, and equipped with full launch-abort systems. Safety is the single non-negotiable of every mission.</p></div>
+      </div>
+      <div class="faq-item reveal d1">
+        <button class="faq-q" data-cursor>Can I bring guests to watch the launch? <span class="ic">+</span></button>
+        <div class="faq-a"><p>Absolutely. Every astronaut receives passes for family and friends to watch from our launch-site viewing terrace, and the full experience includes accommodation for your party during training week.</p></div>
+      </div>
+    </div>
+  </div>
+</section>
+
+<!-- Launch CTA -->
+<section class="section launch-cta">
+  <div class="container">
+    <div class="launch-box reveal">
+      <div class="inner">
+        <h2>Ready to become an <span class="serif">astronaut?</span></h2>
+        <p>Join the flight list for launch windows, seat availability, and first access to new missions. Your horizon is waiting.</p>
+        <form class="launch-form" id="launchForm">
+          <input type="email" placeholder="you@earth.com" required aria-label="Email" />
+          <button type="submit" data-cursor>Join flight list</button>
+        </form>
+        <div class="launch-note" id="launchNote">We'll only reach out about launches. No orbital spam.</div>
+      </div>
+    </div>
+  </div>
+</section>
+
+<!-- Footer -->
+<footer class="footer">
+  <div class="container">
+    <div class="footer-grid">
+      <div class="footer-brand">
+        <a href="#top" class="brand">
+          <span class="brand-mark"><span class="ring"></span><span class="ring r2"></span><span class="core"></span></span>
+          Aphelion
+        </a>
+        <p>Private spaceflight for the civilian era. Human-rated, training-included, view guaranteed.</p>
+        <div class="socials">
+          <a href="#" data-cursor aria-label="X">✦</a>
+          <a href="#" data-cursor aria-label="Instagram">◎</a>
+          <a href="#" data-cursor aria-label="YouTube">▷</a>
+          <a href="#" data-cursor aria-label="Newsletter">✉</a>
+        </div>
+      </div>
+      <div class="footer-col">
+        <h5>Missions</h5>
+        <a href="#fleet">The fleet</a>
+        <a href="#destinations">Destinations</a>
+        <a href="#pricing">Reserve a seat</a>
+        <a href="#experience">Training</a>
+      </div>
+      <div class="footer-col">
+        <h5>Company</h5>
+        <a href="#">About Aphelion</a>
+        <a href="#">Safety record</a>
+        <a href="#">Careers</a>
+        <a href="#">Press</a>
+      </div>
+      <div class="footer-col">
+        <h5>Support</h5>
+        <a href="#faq">FAQ</a>
+        <a href="#">Contact</a>
+        <a href="#">Medical guidelines</a>
+        <a href="#">Terms</a>
+      </div>
+    </div>
+    <div class="footer-bottom">
+      <span>© 2026 Aphelion Spaceflight. Per aspera ad astra.</span>
+      <span>Privacy · Terms · Flight safety</span>
+    </div>
+  </div>
+</footer>
+
+<button class="to-top" id="toTop" data-cursor aria-label="Back to top">↑</button>
+
+<script>
+/* ============================================================
+   Aphelion — interactions
+   ============================================================ */
+(function () {
+  "use strict";
+  var hasFinePointer = window.matchMedia("(pointer:fine)").matches;
+
+  /* ---------- Starfield ---------- */
+  var canvas = document.getElementById("starfield");
+  var ctx = canvas.getContext("2d");
+  var stars = [], shootTimer = 0;
+  function sizeCanvas() {
+    canvas.width = window.innerWidth;
+    canvas.height = window.innerHeight;
+    buildStars();
+  }
+  function buildStars() {
+    stars = [];
+    var count = Math.floor((canvas.width * canvas.height) / 6500);
+    for (var i = 0; i < count; i++) {
+      stars.push({
+        x: Math.random() * canvas.width,
+        y: Math.random() * canvas.height,
+        r: Math.random() * 1.4 + 0.2,
+        a: Math.random() * 0.6 + 0.2,
+        tw: Math.random() * 0.02 + 0.004,
+        dir: Math.random() > 0.5 ? 1 : -1,
+        depth: Math.random() * 0.5 + 0.2
+      });
+    }
+  }
+  var shootingStar = null;
+  function spawnShooting() {
+    shootingStar = {
+      x: Math.random() * canvas.width * 0.6,
+      y: Math.random() * canvas.height * 0.4,
+      len: Math.random() * 120 + 80,
+      speed: Math.random() * 6 + 6,
+      life: 1
+    };
+  }
+  var scrollY = 0;
+  function drawStars() {
+    ctx.clearRect(0, 0, canvas.width, canvas.height);
+    for (var i = 0; i < stars.length; i++) {
+      var s = stars[i];
+      s.a += s.tw * s.dir;
+      if (s.a > 0.85) s.dir = -1;
+      if (s.a < 0.18) s.dir = 1;
+      var py = s.y - scrollY * s.depth * 0.15;
+      py = ((py % canvas.height) + canvas.height) % canvas.height;
+      ctx.beginPath();
+      ctx.arc(s.x, py, s.r, 0, Math.PI * 2);
+      ctx.fillStyle = "rgba(230, 238, 255," + s.a + ")";
+      ctx.fill();
+    }
+    // shooting star
+    shootTimer++;
+    if (shootTimer > 240 && !shootingStar && Math.random() > 0.985) spawnShooting();
+    if (shootingStar) {
+      var ss = shootingStar;
+      var grad = ctx.createLinearGradient(ss.x, ss.y, ss.x - ss.len, ss.y - ss.len * 0.5);
+      grad.addColorStop(0, "rgba(70,224,255,0.9)");
+      grad.addColorStop(1, "rgba(70,224,255,0)");
+      ctx.strokeStyle = grad;
+      ctx.lineWidth = 2;
+      ctx.beginPath();
+      ctx.moveTo(ss.x, ss.y);
+      ctx.lineTo(ss.x - ss.len, ss.y - ss.len * 0.5);
+      ctx.stroke();
+      ss.x += ss.speed;
+      ss.y += ss.speed * 0.5;
+      ss.life -= 0.012;
+      if (ss.life <= 0 || ss.x > canvas.width) { shootingStar = null; shootTimer = 0; }
+    }
+    requestAnimationFrame(drawStars);
+  }
+  sizeCanvas();
+  window.addEventListener("resize", sizeCanvas);
+  window.addEventListener("scroll", function () { scrollY = window.scrollY; }, { passive: true });
+  drawStars();
+
+  /* ---------- Custom cursor ---------- */
+  var dot = document.getElementById("cursorDot");
+  var ring = document.getElementById("cursorRing");
+  var mx = window.innerWidth / 2, my = window.innerHeight / 2, rx = mx, ry = my;
+  if (hasFinePointer) {
+    window.addEventListener("mousemove", function (e) {
+      mx = e.clientX; my = e.clientY;
+      dot.style.left = mx + "px"; dot.style.top = my + "px";
+    });
+    (function ringLoop() {
+      rx += (mx - rx) * 0.18; ry += (my - ry) * 0.18;
+      ring.style.left = rx + "px"; ring.style.top = ry + "px";
+      requestAnimationFrame(ringLoop);
+    })();
+    window.addEventListener("mousedown", function () { ring.classList.add("clicking"); });
+    window.addEventListener("mouseup", function () { ring.classList.remove("clicking"); });
+    document.querySelectorAll("a, button, [data-cursor], [data-tilt], .exp-step").forEach(function (el) {
+      el.addEventListener("mouseenter", function () { ring.classList.add("hovering"); });
+      el.addEventListener("mouseleave", function () { ring.classList.remove("hovering"); });
+    });
+  }
+
+  /* ---------- Scroll progress + nav ---------- */
+  var progress = document.getElementById("scrollProgress");
+  var nav = document.getElementById("nav");
+  var toTop = document.getElementById("toTop");
+  function onScroll() {
+    var h = document.documentElement;
+    var scrolled = h.scrollTop / (h.scrollHeight - h.clientHeight);
+    progress.style.width = (scrolled * 100) + "%";
+    if (h.scrollTop > 40) nav.classList.add("scrolled"); else nav.classList.remove("scrolled");
+    if (h.scrollTop > 700) toTop.classList.add("show"); else toTop.classList.remove("show");
+  }
+  window.addEventListener("scroll", onScroll, { passive: true });
+  onScroll();
+
+  /* ---------- Reveal on scroll ---------- */
+  var io = new IntersectionObserver(function (entries) {
+    entries.forEach(function (entry) {
+      if (entry.isIntersecting) { entry.target.classList.add("in"); io.unobserve(entry.target); }
+    });
+  }, { threshold: 0.12, rootMargin: "0px 0px -60px 0px" });
+  document.querySelectorAll(".reveal").forEach(function (el) { io.observe(el); });
+
+  /* ---------- Count-up ---------- */
+  function animateCount(el) {
+    var target = parseFloat(el.getAttribute("data-count"));
+    var suffix = el.getAttribute("data-suffix") || "";
+    var dur = 1700, start = null;
+    function step(ts) {
+      if (!start) start = ts;
+      var p = Math.min((ts - start) / dur, 1);
+      var eased = 1 - Math.pow(1 - p, 3);
+      el.textContent = Math.floor(eased * target).toLocaleString() + suffix;
+      if (p < 1) requestAnimationFrame(step);
+      else el.textContent = target.toLocaleString() + suffix;
+    }
+    requestAnimationFrame(step);
+  }
+  var countIO = new IntersectionObserver(function (entries) {
+    entries.forEach(function (entry) {
+      if (entry.isIntersecting) { animateCount(entry.target); countIO.unobserve(entry.target); }
+    });
+  }, { threshold: 0.6 });
+  document.querySelectorAll("[data-count]").forEach(function (el) { countIO.observe(el); });
+
+  /* ---------- Parallax ---------- */
+  var parallaxEls = document.querySelectorAll("[data-parallax]");
+  window.addEventListener("scroll", function () {
+    var y = window.scrollY;
+    parallaxEls.forEach(function (el) {
+      var speed = parseFloat(el.getAttribute("data-parallax"));
+      el.style.transform = "translate(-50%, calc(-50% + " + (y * speed) + "px))";
+    });
+  }, { passive: true });
+
+  /* ---------- 3D tilt ---------- */
+  if (hasFinePointer) {
+    document.querySelectorAll("[data-tilt]").forEach(function (el) {
+      el.addEventListener("mousemove", function (e) {
+        var r = el.getBoundingClientRect();
+        var px = (e.clientX - r.left) / r.width - 0.5;
+        var py = (e.clientY - r.top) / r.height - 0.5;
+        el.style.transform = "translateY(-12px) rotateX(" + (-py * 8) + "deg) rotateY(" + (px * 8) + "deg)";
+      });
+      el.addEventListener("mouseleave", function () { el.style.transform = ""; });
+    });
+  }
+
+  /* ---------- Magnetic buttons ---------- */
+  if (hasFinePointer) {
+    document.querySelectorAll(".btn, .nav-cta, .tier-btn").forEach(function (btn) {
+      btn.addEventListener("mousemove", function (e) {
+        var r = btn.getBoundingClientRect();
+        var x = e.clientX - r.left - r.width / 2;
+        var y = e.clientY - r.top - r.height / 2;
+        btn.style.transform = "translate(" + (x * 0.22) + "px," + (y * 0.3) + "px)";
+      });
+      btn.addEventListener("mouseleave", function () { btn.style.transform = ""; });
+    });
+  }
+
+  /* ---------- FAQ accordion ---------- */
+  document.querySelectorAll(".faq-item").forEach(function (item) {
+    var q = item.querySelector(".faq-q");
+    var a = item.querySelector(".faq-a");
+    q.addEventListener("click", function () {
+      var isOpen = item.classList.contains("open");
+      document.querySelectorAll(".faq-item").forEach(function (other) {
+        other.classList.remove("open");
+        other.querySelector(".faq-a").style.maxHeight = null;
+      });
+      if (!isOpen) {
+        item.classList.add("open");
+        a.style.maxHeight = a.scrollHeight + "px";
+      }
+    });
+  });
+
+  /* ---------- Countdown timer ---------- */
+  // Target: 42 days from a fixed reference so it always counts down.
+  var launch = new Date();
+  launch.setDate(launch.getDate() + 42);
+  launch.setHours(9, 30, 0, 0);
+  function pad(n) { return String(n).padStart(2, "0"); }
+  function tick() {
+    var now = new Date();
+    var diff = Math.max(0, launch - now);
+    var d = Math.floor(diff / 86400000);
+    var h = Math.floor((diff % 86400000) / 3600000);
+    var m = Math.floor((diff % 3600000) / 60000);
+    var s = Math.floor((diff % 60000) / 1000);
+    document.getElementById("cd-days").textContent = pad(d);
+    document.getElementById("cd-hours").textContent = pad(h);
+    document.getElementById("cd-mins").textContent = pad(m);
+    document.getElementById("cd-secs").textContent = pad(s);
+  }
+  tick();
+  setInterval(tick, 1000);
+
+  /* ---------- Forms ---------- */
+  var launchForm = document.getElementById("launchForm");
+  var launchNote = document.getElementById("launchNote");
+  if (launchForm) {
+    launchForm.addEventListener("submit", function (e) {
+      e.preventDefault();
+      launchNote.textContent = "You're on the flight list. Watch your inbox for launch windows. 🚀";
+      launchNote.style.color = "#8affd6";
+      launchForm.reset();
+    });
+  }
+
+  /* ---------- Nav toggle ---------- */
+  var navToggle = document.getElementById("navToggle");
+  if (navToggle) navToggle.addEventListener("click", function () {
+    alert("Menu — this is a template. Wire up your nav here!");
+  });
+
+  /* ---------- Back to top + smooth anchors ---------- */
+  toTop.addEventListener("click", function () { window.scrollTo({ top: 0, behavior: "smooth" }); });
+  document.querySelectorAll('a[href^="#"]').forEach(function (a) {
+    a.addEventListener("click", function (e) {
+      var id = a.getAttribute("href");
+      if (id.length > 1) {
+        var t = document.querySelector(id);
+        if (t) { e.preventDefault(); window.scrollTo({ top: t.getBoundingClientRect().top + window.scrollY - 70, behavior: "smooth" }); }
+      }
+    });
+  });
+
+  console.log("%c🚀 Aphelion Spaceflight — template loaded", "color:#46e0ff;font-size:14px;font-weight:bold;");
+})();
+</script>
+</body>
+</html>
